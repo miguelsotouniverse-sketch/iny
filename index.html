@@ -297,11 +297,20 @@
     google.accounts.id.renderButton(document.getElementById('gbtn'),
       {theme:'outline', size:'large', text:'signin_with', shape:'rectangular', logo_alignment:'center'});
     let saved=''; try{ saved=sessionStorage.getItem('recall_tok')||''; }catch(e){}
-    if(saved){ ID_TOKEN=saved; verifySession(); }
+    if(saved){ ID_TOKEN=saved; showValidating(); verifySession(); }
+  }
+  function showValidating(){
+    document.getElementById('gbtn').style.display='none';
+    const m=document.getElementById('login-msg');
+    m.textContent='Validando tu sesión…'; m.style.color='var(--taupe)';
   }
   async function verifySession(){
     try{ PROFILE=await api('auth',{}); showApp(); }
-    catch(e){ ID_TOKEN=''; try{sessionStorage.removeItem('recall_tok');}catch(_){} }
+    catch(e){
+      ID_TOKEN=''; try{sessionStorage.removeItem('recall_tok');}catch(_){}
+      document.getElementById('gbtn').style.display='flex';
+      const m=document.getElementById('login-msg'); m.textContent=''; m.style.color='var(--vencido)';
+    }
   }
   async function onCredential(resp){
     ID_TOKEN = resp.credential;
