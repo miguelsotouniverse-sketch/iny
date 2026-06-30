@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Recall · Inyectables — MS Universe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --negro:#030707; --taupe:#A19487; --taupe-soft:#C9C0B8;
+    --crema:#F4F2F1; --crema-2:#EAE6E2; --linea:#DED7D0;
+    --vencido:#9E5B4C; --vencido-bg:#F3E5E1;
+    --porvencer:#B08A3E; --porvencer-bg:#F3EBDA;
+    --vigente:#6E7E6B; --vigente-bg:#E7ECE5;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{background:var(--crema);color:var(--negro);font-family:'Jost',system-ui,sans-serif;font-weight:300;-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1040px;margin:0 auto;padding:26px 22px 80px}
+
+  header.app{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;border-bottom:1px solid var(--linea);padding-bottom:18px}
+  .brand .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--taupe);font-weight:500}
+  .brand h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:34px;line-height:1.05;margin:4px 0 0}
+  .brand h1 em{font-style:italic;color:var(--taupe)}
+  .head-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .op-sel{font-family:'Jost';font-size:12px;border:1px solid var(--linea);border-radius:2px;padding:8px 10px;background:#fff;color:var(--negro)}
+  .add-btn{font-family:'Jost';font-weight:500;font-size:13px;letter-spacing:.04em;background:var(--negro);color:var(--crema);border:none;border-radius:2px;padding:11px 18px;cursor:pointer;transition:opacity .18s ease}
+  .add-btn:hover{opacity:.85}
+  .add-btn:focus-visible{outline:2px solid var(--taupe);outline-offset:2px}
+
+  nav.tabs{display:flex;margin:22px 0 24px;border-bottom:1px solid var(--linea)}
+  .tab{font-family:'Jost';font-weight:400;font-size:14px;letter-spacing:.02em;background:none;border:none;color:var(--taupe);padding:12px 2px;margin-right:30px;cursor:pointer;position:relative}
+  .tab[aria-selected="true"]{color:var(--negro);font-weight:500}
+  .tab[aria-selected="true"]::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--negro)}
+  .tab:focus-visible{outline:2px solid var(--taupe);outline-offset:3px;border-radius:2px}
+  .tab .count{font-size:11px;color:var(--taupe);margin-left:7px;font-weight:400}
+
+  .view{display:none}
+  .view.active{display:block;animation:fade .3s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion:reduce){.view.active{animation:none}}
+
+  .summary{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:22px}
+  .chip{flex:1;min-width:150px;background:#fff;border:1px solid var(--linea);border-radius:3px;padding:16px 18px}
+  .chip .n{font-family:'Cormorant Garamond',serif;font-size:38px;line-height:1;font-weight:600}
+  .chip .l{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe);margin-top:6px}
+  .chip.v .n{color:var(--vencido)} .chip.p .n{color:var(--porvencer)} .chip.g .n{color:var(--vigente)}
+
+  .group-label{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--taupe);font-weight:500;margin:24px 0 12px}
+  .row{display:grid;grid-template-columns:1.4fr 1fr .9fr .9fr auto;gap:14px;align-items:center;background:#fff;border:1px solid var(--linea);border-left:3px solid var(--taupe-soft);border-radius:3px;padding:15px 18px;margin-bottom:9px}
+  .row.is-vencido{border-left-color:var(--vencido)} .row.is-porvencer{border-left-color:var(--porvencer)}
+  .row .pname{font-weight:500;font-size:15px}
+  .row .meta{font-size:12px;color:var(--taupe);margin-top:2px}
+  .row .cat{font-size:13px}
+  .row .lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--taupe)}
+  .row .val{font-size:13px;margin-top:1px}
+  .row .val strong{font-weight:600}
+  .pill{display:inline-block;font-size:11px;letter-spacing:.04em;padding:4px 9px;border-radius:2px;font-weight:500;white-space:nowrap}
+  .pill.vencido{background:var(--vencido-bg);color:var(--vencido)}
+  .pill.porvencer{background:var(--porvencer-bg);color:var(--porvencer)}
+  .pill.vigente{background:var(--vigente-bg);color:var(--vigente)}
+  .contact{display:flex;justify-content:flex-end}
+  .cbtn{font-family:'Jost';font-size:12px;font-weight:500;letter-spacing:.03em;cursor:pointer;border:1px solid var(--negro);background:none;color:var(--negro);border-radius:2px;padding:7px 13px;transition:all .15s ease;white-space:nowrap}
+  .cbtn:hover{background:var(--negro);color:var(--crema)}
+  .cbtn:focus-visible{outline:2px solid var(--taupe);outline-offset:2px}
+  .cbtn.state-contactado{border-color:var(--porvencer);color:var(--porvencer);background:var(--porvencer-bg)}
+  .cbtn.state-reagendado{border-color:var(--vigente);color:var(--vigente);background:var(--vigente-bg)}
+
+  .controls{display:flex;gap:24px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid var(--linea);border-radius:3px;padding:16px 18px;margin-bottom:18px}
+  .controls .field{display:flex;flex-direction:column;gap:6px}
+  .controls label{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--taupe);font-weight:500}
+  .controls input[type=range]{width:170px;accent-color:var(--negro)}
+  .thr-val{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600}
+  .filtersel{font-family:'Jost';font-size:13px;border:1px solid var(--linea);border-radius:2px;padding:7px 10px;background:var(--crema);color:var(--negro)}
+  .settings-chip{margin-left:auto;font-size:11px;color:var(--taupe);border:1px dashed var(--taupe-soft);border-radius:2px;padding:7px 11px;cursor:pointer;background:none}
+  .settings-chip:hover{color:var(--negro);border-color:var(--taupe)}
+
+  table.dorm{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--linea);border-radius:3px;overflow:hidden}
+  table.dorm th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--taupe);font-weight:500;text-align:left;padding:13px 16px;border-bottom:1px solid var(--linea)}
+  table.dorm td{padding:12px 16px;border-bottom:1px solid var(--crema-2);font-size:14px}
+  table.dorm tr:last-child td{border-bottom:none}
+  table.dorm tr:hover td{background:#FBFAF9}
+  table.dorm input[type=checkbox]{width:16px;height:16px;accent-color:var(--negro);cursor:pointer}
+  .meses{font-family:'Cormorant Garamond',serif;font-weight:600;font-size:18px}
+  .meses.alto{color:var(--vencido)}
+  .mini-btn{font-family:'Jost';font-size:11px;font-weight:500;border:1px solid var(--linea);background:none;color:var(--negro);border-radius:2px;padding:5px 9px;cursor:pointer}
+  .mini-btn:hover{border-color:var(--negro)}
+  .dorm-foot{display:flex;justify-content:space-between;align-items:center;margin-top:16px;flex-wrap:wrap;gap:12px}
+  .selcount{font-size:13px;color:var(--taupe)} .selcount strong{color:var(--negro);font-weight:600}
+  .export-btn{font-family:'Jost';font-weight:500;font-size:13px;letter-spacing:.04em;background:var(--negro);color:var(--crema);border:none;border-radius:2px;padding:11px 20px;cursor:pointer}
+  .export-btn:disabled{opacity:.35;cursor:not-allowed}
+  .export-btn:hover:not(:disabled){opacity:.85}
+
+  .backdrop{position:fixed;inset:0;background:rgba(3,7,7,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+  .backdrop.open{display:flex}
+  .modal{background:var(--crema);border-radius:4px;max-width:460px;width:100%;padding:28px 28px 24px;border:1px solid var(--linea);max-height:90vh;overflow:auto}
+  .modal .kicker{font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--taupe);font-weight:500}
+  .modal h2{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:26px;margin:5px 0 18px}
+  .mfield{margin-bottom:14px;position:relative}
+  .mfield label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--taupe);margin-bottom:5px;font-weight:500}
+  .mfield input,.mfield select{width:100%;font-family:'Jost';font-size:14px;border:1px solid var(--linea);border-radius:2px;padding:10px 12px;background:#fff;color:var(--negro)}
+  .mfield input:focus,.mfield select:focus{outline:2px solid var(--taupe);outline-offset:1px;border-color:var(--taupe)}
+  .ac{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid var(--linea);border-top:none;z-index:5;max-height:180px;overflow:auto}
+  .ac div{padding:9px 12px;font-size:13px;cursor:pointer}
+  .ac div:hover{background:var(--crema-2)}
+  .ac .pid{color:var(--taupe);font-size:11px}
+  .hint{font-size:12px;color:var(--taupe);margin-top:12px;line-height:1.45;border-top:1px solid var(--linea);padding-top:12px}
+  .modal-actions{display:flex;gap:10px;margin-top:18px}
+  .modal-actions button{flex:1;font-family:'Jost';font-weight:500;font-size:13px;letter-spacing:.04em;border-radius:2px;padding:11px;cursor:pointer}
+  .btn-save{background:var(--negro);color:var(--crema);border:none}
+  .btn-save:disabled{opacity:.4;cursor:not-allowed}
+  .btn-cancel{background:none;color:var(--negro);border:1px solid var(--linea)}
+
+  /* Config editor */
+  #cfgRows .crow{display:grid;grid-template-columns:1fr 1.3fr auto auto;gap:8px;align-items:center;margin-bottom:7px}
+  #cfgRows input,#cfgRows select{font-family:'Jost';font-size:13px;border:1px solid var(--linea);border-radius:2px;padding:7px 9px;background:#fff}
+  #cfgRows .del{border:1px solid var(--linea);background:none;border-radius:2px;width:30px;height:30px;cursor:pointer;color:var(--vencido)}
+
+  .state-msg{text-align:center;color:var(--taupe);padding:40px 0;font-size:14px}
+  .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--negro);color:var(--crema);padding:12px 22px;border-radius:3px;font-size:13px;z-index:80;opacity:0;transition:opacity .25s ease;pointer-events:none}
+  .toast.show{opacity:1}
+  .setup{background:var(--porvencer-bg);border:1px solid var(--porvencer);color:#6b541f;border-radius:3px;padding:14px 18px;font-size:13px;margin-bottom:22px;line-height:1.5}
+  .setup code{background:#fff;padding:1px 5px;border-radius:2px}
+  .protonote{margin-top:14px;font-size:11px;color:var(--taupe);text-align:center;letter-spacing:.04em}
+
+  .op-chip{font-size:12px;color:var(--taupe)}
+  .signout{font-family:'Jost';font-size:11px;letter-spacing:.04em;background:none;border:none;color:var(--taupe);cursor:pointer;text-decoration:underline;padding:0}
+  .signout:hover{color:var(--negro)}
+  #login{position:fixed;inset:0;background:var(--crema);display:flex;align-items:center;justify-content:center;z-index:100;padding:24px}
+  #login .box{text-align:center;max-width:360px}
+  #login .kicker{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--taupe);font-weight:500}
+  #login h1{font-family:'Cormorant Garamond',serif;font-weight:500;font-size:38px;line-height:1.05;margin:8px 0 4px}
+  #login h1 em{font-style:italic;color:var(--taupe)}
+  #login p{font-size:13px;color:var(--taupe);margin:0 0 26px}
+  #gbtn{display:flex;justify-content:center}
+  #login-msg{margin-top:18px;font-size:13px;color:var(--vencido);min-height:18px}
+  .app-hidden{display:none!important}
+
+  @media (max-width:680px){
+    .row{grid-template-columns:1fr 1fr;row-gap:12px}
+    .row .contact{grid-column:1 / -1;justify-content:flex-start}
+    table.dorm th:nth-child(4),table.dorm td:nth-child(4){display:none}
+    #cfgRows .crow{grid-template-columns:1fr 1fr auto auto}
+  }
+</style>
+</head>
+<body>
+
+<div id="login">
+  <div class="box">
+    <div class="kicker">MS Universe · Operación</div>
+    <h1>Recall de <em>Inyectables</em></h1>
+    <p>Inicia sesión con tu cuenta autorizada</p>
+    <div id="gbtn"></div>
+    <div id="login-msg"></div>
+  </div>
+</div>
+
+<div class="wrap app-hidden" id="appwrap">
+
+  <header class="app">
+    <div class="brand">
+      <div class="kicker">MS Universe · Operación</div>
+      <h1>Recall de <em>Inyectables</em></h1>
+    </div>
+    <div class="head-right">
+      <span class="op-chip" id="profile"></span>
+      <button class="signout" onclick="signOut()">Salir</button>
+      <button class="add-btn" onclick="openModal()">+ Registrar próxima cita</button>
+    </div>
+  </header>
+
+  <div id="setup" class="setup" style="display:none"></div>
+
+  <nav class="tabs" role="tablist">
+    <button class="tab" role="tab" aria-selected="true" onclick="switchTab(this,'vencimientos')">Vencimientos <span class="count">recall continuo</span></button>
+    <button class="tab" role="tab" aria-selected="false" onclick="switchTab(this,'dormidos')">Dormidos <span class="count">reactivación</span></button>
+  </nav>
+
+  <!-- ===== VENCIMIENTOS ===== -->
+  <section class="view active" id="vencimientos" role="tabpanel">
+    <div class="summary">
+      <div class="chip v"><div class="n" id="c-venc">·</div><div class="l">Vencidos</div></div>
+      <div class="chip p"><div class="n" id="c-prox">·</div><div class="l">Por vencer · 30 días</div></div>
+      <div class="chip g"><div class="n" id="c-vig">·</div><div class="l">Vigentes</div></div>
+    </div>
+    <div id="recall-content"><div class="state-msg">Cargando…</div></div>
+  </section>
+
+  <!-- ===== DORMIDOS ===== -->
+  <section class="view" id="dormidos" role="tabpanel">
+    <div class="controls">
+      <div class="field">
+        <label>Sin volver hace más de</label>
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="range" min="3" max="24" value="6" id="thr" oninput="renderDormidos()">
+          <span class="thr-val"><span id="thr-num">6</span> meses</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select class="filtersel" id="catfilter" onchange="renderDormidos()"><option value="">Todas</option></select>
+      </div>
+      <button class="settings-chip" onclick="openConfig()">⚙ Qué cuenta como inyectable</button>
+    </div>
+    <div id="dorm-wrap"><div class="state-msg">Cargando…</div></div>
+    <div class="dorm-foot">
+      <div class="selcount"><strong id="selnum">0</strong> seleccionados para tu campaña</div>
+      <button class="export-btn" id="exportbtn" disabled onclick="exportCSV()">Exportar selección (CSV)</button>
+    </div>
+  </section>
+
+  <p class="protonote">MS Universe · Recall de Inyectables</p>
+</div>
+
+<!-- Modal: registrar próxima cita -->
+<div class="backdrop" id="backdrop" onclick="if(event.target===this)closeModal()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="kicker">En la cita</div>
+    <h2>¿Cuándo le toca volver?</h2>
+    <div class="mfield">
+      <label>Paciente</label>
+      <input type="text" id="m-search" placeholder="Buscar por nombre o ID…" autocomplete="off" oninput="searchDebounced()">
+      <div class="ac" id="m-ac" style="display:none"></div>
+    </div>
+    <div class="mfield">
+      <label>Categoría aplicada hoy</label>
+      <select id="m-cat"></select>
+    </div>
+    <div class="mfield">
+      <label>Próxima fecha sugerida</label>
+      <input type="date" id="m-fecha">
+    </div>
+    <div class="mfield">
+      <label>Nota (opcional)</label>
+      <input type="text" id="m-nota" placeholder="Ej. Sculptra: sesión 2 de 3, mensual">
+    </div>
+    <p class="hint">La fecha la decides tú, paciente por paciente — sin reglas fijas. La app solo se asegura de que nadie se quede sin su “ya te toca”.</p>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" id="m-save" onclick="saveNextDue()" disabled>Guardar próxima cita</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: config -->
+<div class="backdrop" id="cfgBackdrop" onclick="if(event.target===this)closeConfig()">
+  <div class="modal" role="dialog" aria-modal="true">
+    <div class="kicker">Filtro del backfill</div>
+    <h2>Qué cuenta como inyectable</h2>
+    <p class="hint" style="border:none;margin:0 0 14px;padding:0">Reglas por palabra clave. La primera que coincide con el nombre del tratamiento gana. “Incluir = No” lo saca del recall (ej. cicatrices, dermapen).</p>
+    <div id="cfgRows"></div>
+    <button class="mini-btn" onclick="addCfgRow()" style="margin-top:6px">+ Agregar regla</button>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeConfig()">Cancelar</button>
+      <button class="btn-save" onclick="saveConfig()">Guardar reglas</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  /* ============ CONFIG: pega aquí la URL /exec de tu RecallGateway ============ */
+  const GATEWAY_URL = 'https://script.google.com/macros/s/AKfycbzFea7ymQGwv6cKc8VS9j5cVPCqgov0RJgW2uX24OvElcm8V-iNNUfsJvk_Ohl9f-5KKg/exec';
+  const CLIENT_ID = '634352012698-b47t3ed3tvd4d1g7l30l68bd6e5s0ri4.apps.googleusercontent.com';
+
+  const CATEGORIAS = ['Botox','Botox maseteros','Botox trapecios','AH labios',
+    'AH surcos nasogenianos','AH ojeras','Bioestimuladores','NCTF','Otro'];
+
+  let RECALL = [], DORMIDOS = [], SELPID = '', SELNOM = '';
+  let ID_TOKEN = '', PROFILE = null;
+
+  /* ---------- API ---------- */
+  async function api(action, params){
+    if(!GATEWAY_URL) throw new Error('GATEWAY_URL no configurada');
+    const res = await fetch(GATEWAY_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify(Object.assign({action:action, idToken:ID_TOKEN}, params||{}))
+    });
+    const j = await res.json();
+    if(!j.ok){
+      if(j.error==='NO_AUTH') requireLogin('Tu sesión expiró. Inicia de nuevo.');
+      throw new Error(j.error || 'Error');
+    }
+    return j.data;
+  }
+
+  /* ---------- Auth (Google Identity Services) ---------- */
+  function initAuth(){
+    if(!(window.google && google.accounts && google.accounts.id)){ setTimeout(initAuth,150); return; }
+    google.accounts.id.initialize({ client_id: CLIENT_ID, callback: onCredential });
+    google.accounts.id.renderButton(document.getElementById('gbtn'),
+      {theme:'outline', size:'large', text:'signin_with', shape:'rectangular', logo_alignment:'center'});
+    let saved=''; try{ saved=sessionStorage.getItem('recall_tok')||''; }catch(e){}
+    if(saved){ ID_TOKEN=saved; verifySession(); }
+  }
+  async function verifySession(){
+    try{ PROFILE=await api('auth',{}); showApp(); }
+    catch(e){ ID_TOKEN=''; try{sessionStorage.removeItem('recall_tok');}catch(_){} }
+  }
+  async function onCredential(resp){
+    ID_TOKEN = resp.credential;
+    try{
+      PROFILE = await api('auth',{});
+      try{ sessionStorage.setItem('recall_tok', ID_TOKEN); }catch(e){}
+      document.getElementById('login-msg').textContent='';
+      showApp();
+    }catch(e){
+      ID_TOKEN='';
+      document.getElementById('login-msg').textContent =
+        (e.message==='NO_AUTORIZADO') ? 'Tu cuenta no está autorizada para esta app.'
+                                      : 'No se pudo validar la sesión. Intenta de nuevo.';
+    }
+  }
+  function showApp(){
+    document.getElementById('login').classList.add('app-hidden');
+    document.getElementById('appwrap').classList.remove('app-hidden');
+    document.getElementById('profile').textContent = (PROFILE && PROFILE.email) ? PROFILE.email : '';
+    loadRecall();
+  }
+  function requireLogin(msg){
+    PROFILE=null; ID_TOKEN=''; try{sessionStorage.removeItem('recall_tok');}catch(e){}
+    document.getElementById('appwrap').classList.add('app-hidden');
+    document.getElementById('login').classList.remove('app-hidden');
+    if(msg!=null) document.getElementById('login-msg').textContent=msg;
+  }
+  function signOut(){
+    try{ google.accounts.id.disableAutoSelect(); }catch(e){}
+    requireLogin('');
+  }
+
+  /* ---------- Tabs ---------- */
+  function switchTab(btn,id){
+    document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected','false'));
+    btn.setAttribute('aria-selected','true');
+    document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    if(id==='dormidos' && !DORMIDOS.length) loadDormidos();
+  }
+
+  /* ---------- Vencimientos ---------- */
+  async function loadRecall(){
+    const box = document.getElementById('recall-content');
+    try{
+      RECALL = await api('getRecall');
+      renderRecall();
+    }catch(e){ box.innerHTML = `<div class="state-msg">No se pudo cargar: ${e.message}</div>`; }
+  }
+  function pill(r){
+    if(r.estado==='vencido')  return `<span class="pill vencido">Vencido · ${Math.abs(r.dias)} días</span>`;
+    if(r.estado==='porvencer')return `<span class="pill porvencer">En ${r.dias} días</span>`;
+    return `<span class="pill vigente">Vigente</span>`;
+  }
+  const NEXT = {Pendiente:'Contactado', Contactado:'Reagendado', Reagendado:'Reagendado'};
+  const CLBL = {Pendiente:'Marcar contactado', Contactado:'✓ Contactado · marcar reagendado', Reagendado:'✓ Reagendado'};
+  const CCLS = {Pendiente:'', Contactado:'state-contactado', Reagendado:'state-reagendado'};
+  function rowHTML(r){
+    return `<div class="row is-${r.estado}">
+      <div><div class="pname">${esc(r.nombre)}</div><div class="meta">ID ${esc(r.pid)}${r.nota?' · '+esc(r.nota):''}</div></div>
+      <div class="cat">${esc(r.categoria)}</div>
+      <div><div class="lbl">Última</div><div class="val">${r.ultima||'—'}</div></div>
+      <div><div class="lbl">Próxima</div><div class="val"><strong>${r.proxima}</strong></div><div style="margin-top:5px">${pill(r)}</div></div>
+      <div class="contact"><button class="cbtn ${CCLS[r.contacto]}" onclick="cycleContacto('${r.id}','${r.contacto}')">${CLBL[r.contacto]}</button></div>
+    </div>`;
+  }
+  function renderRecall(){
+    const venc=RECALL.filter(r=>r.estado==='vencido'),
+          prox=RECALL.filter(r=>r.estado==='porvencer'),
+          vig =RECALL.filter(r=>r.estado==='vigente');
+    document.getElementById('c-venc').textContent=venc.length;
+    document.getElementById('c-prox').textContent=prox.length;
+    document.getElementById('c-vig').textContent=vig.length;
+    const sec=(lbl,arr)=> arr.length? `<div class="group-label">${lbl}</div>${arr.map(rowHTML).join('')}`:'';
+    const html = sec('Vencidos — contactar ya',venc)+sec('Por vencer — próximos 30 días',prox)+sec('Vigentes',vig);
+    document.getElementById('recall-content').innerHTML = html || `<div class="state-msg">Aún no hay recalls. Usa “+ Registrar próxima cita”.</div>`;
+  }
+  async function cycleContacto(id, actual){
+    const nuevo = NEXT[actual]; if(nuevo===actual) return;
+    try{ await api('setContacto',{id:id, estado:nuevo}); const r=RECALL.find(x=>x.id===id); if(r)r.contacto=nuevo; renderRecall(); toast('Actualizado'); }
+    catch(e){ toast('Error: '+e.message); }
+  }
+
+  /* ---------- Dormidos ---------- */
+  async function loadDormidos(){
+    const w=document.getElementById('dorm-wrap');
+    try{
+      DORMIDOS = await api('getDormidos');
+      const cats=[...new Set(DORMIDOS.map(d=>d.categoria))].sort();
+      document.getElementById('catfilter').innerHTML='<option value="">Todas</option>'+cats.map(c=>`<option>${esc(c)}</option>`).join('');
+      renderDormidos();
+    }catch(e){ w.innerHTML=`<div class="state-msg">No se pudo cargar: ${e.message}</div>`; }
+  }
+  function renderDormidos(){
+    const thr=+document.getElementById('thr').value;
+    const cat=document.getElementById('catfilter').value;
+    document.getElementById('thr-num').textContent=thr;
+    const rows=DORMIDOS.filter(d=>d.meses>=thr && (!cat||d.categoria===cat));
+    const body = rows.map((d,i)=>`<tr>
+        <td><input type="checkbox" class="dchk" data-i="${DORMIDOS.indexOf(d)}" onchange="updateSel()"></td>
+        <td><span style="font-weight:500">${esc(d.nombre)}</span><div style="font-size:12px;color:var(--taupe)">ID ${esc(d.pid)||'—'}</div></td>
+        <td>${esc(d.categoria)}</td>
+        <td>${d.ultima}</td>
+        <td><span class="meses ${d.meses>=9?'alto':''}">${d.meses}</span> <span style="font-size:11px;color:var(--taupe)">meses</span></td>
+        <td><button class="mini-btn" onclick="fromDormido(${DORMIDOS.indexOf(d)})">Registrar próxima</button></td>
+      </tr>`).join('');
+    document.getElementById('dorm-wrap').innerHTML = `<table class="dorm"><thead><tr>
+        <th style="width:34px"><input type="checkbox" id="selall" onchange="toggleAll(this)"></th>
+        <th>Paciente</th><th>Categoría</th><th>Última aplicación</th><th>Sin venir</th><th></th>
+      </tr></thead><tbody>${ body || `<tr><td colspan="6" class="state-msg">Nadie rebasa ese umbral.</td></tr>` }</tbody></table>`;
+    updateSel();
+  }
+  function toggleAll(b){ document.querySelectorAll('.dchk').forEach(c=>c.checked=b.checked); updateSel(); }
+  function updateSel(){
+    const n=document.querySelectorAll('.dchk:checked').length;
+    document.getElementById('selnum').textContent=n;
+    document.getElementById('exportbtn').disabled=n===0;
+  }
+  function exportCSV(){
+    const sel=[...document.querySelectorAll('.dchk:checked')].map(c=>DORMIDOS[+c.dataset.i]);
+    const head=['Nombre','ID Paciente','Categoria','Ultima aplicacion','Meses sin venir'];
+    const lines=[head.join(',')].concat(sel.map(d=>[q(d.nombre),q(d.pid),q(d.categoria),q(d.ultima),d.meses].join(',')));
+    const blob=new Blob(["\ufeff"+lines.join('\n')],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a'); a.href=URL.createObjectURL(blob);
+    a.download='dormidos_recall_'+new Date().toISOString().slice(0,10)+'.csv'; a.click();
+    toast(sel.length+' paciente(s) exportados');
+  }
+  function q(s){ s=String(s==null?'':s); return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s; }
+
+  /* ---------- Modal registrar ---------- */
+  function fillCats(sel){ sel.innerHTML=CATEGORIAS.map(c=>`<option>${c}</option>`).join(''); }
+  function openModal(){
+    SELPID=''; SELNOM='';
+    document.getElementById('m-search').value='';
+    document.getElementById('m-nota').value='';
+    document.getElementById('m-ac').style.display='none';
+    fillCats(document.getElementById('m-cat'));
+    document.getElementById('m-fecha').value='';
+    document.getElementById('m-save').disabled=true;
+    document.getElementById('m-search').dataset.iso='';
+    document.getElementById('backdrop').classList.add('open');
+  }
+  function closeModal(){ document.getElementById('backdrop').classList.remove('open'); }
+  let acTimer=null;
+  function searchDebounced(){ clearTimeout(acTimer); acTimer=setTimeout(doSearch,260); SELPID=''; checkSave(); }
+  async function doSearch(){
+    const q=document.getElementById('m-search').value.trim();
+    const ac=document.getElementById('m-ac');
+    if(q.length<2){ ac.style.display='none'; return; }
+    try{
+      const res=await api('searchPaciente',{q:q});
+      if(!res.length){ ac.style.display='none'; return; }
+      ac.innerHTML=res.map(p=>`<div onclick="pickPaciente('${esc(p.pid)}','${escAttr(p.nombre)}')">${esc(p.nombre)} <span class="pid">· ID ${esc(p.pid)||'—'}</span></div>`).join('');
+      ac.style.display='block';
+    }catch(e){ ac.style.display='none'; }
+  }
+  function pickPaciente(pid,nom){
+    SELPID=pid; SELNOM=nom;
+    document.getElementById('m-search').value=nom+(pid?(' · ID '+pid):'');
+    document.getElementById('m-ac').style.display='none';
+    checkSave();
+  }
+  function checkSave(){
+    const ok = (SELPID||SELNOM) && document.getElementById('m-fecha').value;
+    document.getElementById('m-save').disabled=!ok;
+  }
+  document.addEventListener('input',e=>{ if(e.target&&e.target.id==='m-fecha') checkSave(); });
+  function fromDormido(i){
+    const d=DORMIDOS[i]; openModal();
+    SELPID=d.pid; SELNOM=d.nombre;
+    document.getElementById('m-search').value=d.nombre+(d.pid?(' · ID '+d.pid):'');
+    const sel=document.getElementById('m-cat');
+    if([...sel.options].some(o=>o.value===d.categoria)) sel.value=d.categoria;
+    checkSave();
+  }
+  async function saveNextDue(){
+    const btn=document.getElementById('m-save'); btn.disabled=true;
+    try{
+      await api('setNextDue',{
+        pid:SELPID, nombre:SELNOM,
+        categoria:document.getElementById('m-cat').value,
+        proxima:document.getElementById('m-fecha').value,
+        nota:document.getElementById('m-nota').value
+      });
+      closeModal(); toast('Próxima cita registrada');
+      await loadRecall(); DORMIDOS=[]; if(document.getElementById('dormidos').classList.contains('active')) loadDormidos();
+    }catch(e){ toast('Error: '+e.message); btn.disabled=false; }
+  }
+
+  /* ---------- Config editor ---------- */
+  async function openConfig(){
+    document.getElementById('cfgBackdrop').classList.add('open');
+    document.getElementById('cfgRows').innerHTML='<div class="state-msg">Cargando…</div>';
+    try{
+      const rules=await api('getConfig');
+      document.getElementById('cfgRows').innerHTML='';
+      rules.forEach(r=>addCfgRow(r));
+    }catch(e){ document.getElementById('cfgRows').innerHTML=`<div class="state-msg">${e.message}</div>`; }
+  }
+  function addCfgRow(r){
+    r=r||{patron:'',categoria:'',incluir:true};
+    const div=document.createElement('div'); div.className='crow';
+    div.innerHTML=`<input placeholder="palabra clave" value="${escAttr(r.patron)}">
+      <input placeholder="categoría" value="${escAttr(r.categoria)}">
+      <select><option value="Si">Incluir</option><option value="No">Excluir</option></select>
+      <button class="del" title="Quitar">×</button>`;
+    div.querySelector('select').value=r.incluir?'Si':'No';
+    div.querySelector('.del').onclick=()=>div.remove();
+    document.getElementById('cfgRows').appendChild(div);
+  }
+  function closeConfig(){ document.getElementById('cfgBackdrop').classList.remove('open'); }
+  async function saveConfig(){
+    const rules=[...document.querySelectorAll('#cfgRows .crow')].map(d=>{
+      const i=d.querySelectorAll('input'), s=d.querySelector('select');
+      return {patron:i[0].value.trim(), categoria:i[1].value.trim(), incluir:s.value==='Si'};
+    }).filter(r=>r.patron);
+    try{ await api('saveConfig',{rules:rules}); closeConfig(); toast('Reglas guardadas'); DORMIDOS=[]; if(document.getElementById('dormidos').classList.contains('active')) loadDormidos(); }
+    catch(e){ toast('Error: '+e.message); }
+  }
+
+  /* ---------- utils ---------- */
+  function esc(s){ return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+  function escAttr(s){ return String(s==null?'':s).replace(/"/g,'&quot;').replace(/'/g,"\\'"); }
+  let toastTimer=null;
+  function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),2200); }
+  document.addEventListener('keydown',e=>{ if(e.key==='Escape'){closeModal();closeConfig();} });
+
+  /* ---------- init ---------- */
+  function init(){
+    if(!GATEWAY_URL){
+      document.getElementById('gbtn').style.display='none';
+      const m=document.getElementById('login-msg');
+      m.innerHTML='⚙ Falta conectar el gateway: pega la URL <code>/exec</code> en <code>GATEWAY_URL</code> dentro de este archivo.';
+      m.style.color='var(--porvencer)';
+      return;
+    }
+    initAuth();
+  }
+  init();
+</script>
+</body>
+</html>
